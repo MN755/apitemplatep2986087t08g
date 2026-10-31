@@ -13,10 +13,10 @@ export const TaskModel = {
 	tableName: "tasks",
 	primaryKeys: ["id"],
 	schema: task,
-	serializer: (obj: Record<string, string | number | boolean>) => {
+	serializer: (obj: object) => {
 		return {
 			...obj,
-			completed: Boolean(obj.completed),
+			completed: "completed" in obj && Boolean(obj.completed),
 		};
 	},
 	serializerObject: task,

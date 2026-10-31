@@ -1,3 +1,4 @@
+import { DOMParser, type Element } from "@xmldom/xmldom";
 import { Hono } from "hono";
 
 type FeedItem = {
@@ -78,7 +79,9 @@ function firstLinkFromAtom(entry: Element): string | undefined {
 }
 
 function parseRssOrAtom(xmlText: string): { feedTitle?: string; feedLink?: string; items: FeedItem[] } {
-  const parser = new DOMParser();
+  const parser = new DOMParser({
+    onError: () => { throw new Error("Failed to parse XML (not valid RSS/Atom?)"); },
+  });
   const doc = parser.parseFromString(xmlText, "text/xml");
 
   // Detect parser errors

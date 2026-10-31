@@ -1,7 +1,7 @@
-import { SELF } from "cloudflare:test";
+import { templateWorker } from "../templateWorker";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-describe("Dummy API Integration Tests", () => {
+describe("Dummy template component integration", () => {
 	beforeEach(async () => {
 		vi.clearAllMocks();
 	});
@@ -10,7 +10,7 @@ describe("Dummy API Integration Tests", () => {
 		it("should return the log details", async () => {
 			const slug = "test-slug";
 			const requestBody = { name: "Test Name" };
-			const response = await SELF.fetch(`http://local.test/dummy/${slug}`, {
+			const response = await templateWorker.fetch(`http://local.test/dummy/${slug}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(requestBody),
