@@ -8,5 +8,7 @@ export class TaskList extends D1ListEndpoint<HandleArgs> {
 	};
 
 	searchFields = ["name", "slug", "description"];
-	defaultOrderBy = "id DESC";
+	orderByFields = ["id"];
+	defaultOrderBy = "id";
+	defaultOrderByDirection = "desc" as const;
 }

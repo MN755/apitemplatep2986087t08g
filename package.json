@@ -16,9 +16,10 @@
 		"publish": true
 	},
 	"dependencies": {
-		"chanfana": "2.8.3",
+		"@xmldom/xmldom": "0.9.12",
+		"chanfana": "3.4.2",
 		"hono": "4.13.14",
-		"zod": "3.25.67"
+		"zod": "4.6.7"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-plugin": "1.4.10",
@@ -35,6 +36,10 @@
 		"predeploy": "wrangler d1 migrations apply DB --remote",
 		"schema": "npx chanfana",
 		"seedLocalDb": "wrangler d1 migrations apply DB --local",
-		"test": "wrangler deploy --dry-run && npx vitest run --config tests/vitest.config.mts"
+		"test": "npm run typecheck && wrangler deploy --dry-run && npx vitest run --config tests/vitest.config.mts",
+		"typecheck": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json"
+	},
+	"engines": {
+		"node": "^20.19.0 || >=22.12.0"
 	}
 }

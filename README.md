@@ -22,6 +22,8 @@ Besides being able to see the OpenAPI schema (openapi.json) in the browser, you 
 
 ## Getting Started
 
+Local development and tests require Node 20.19+ or 22.12+ (validated with Node 24). The current `wrangler.jsonc` entry point, `src/index.ts`, serves `/health` and `/rss` for JSON, RSS and Atom feeds. The retained task/dummy example components are tested through `tests/templateWorker.ts`; the deployed feed tests use the actual Worker entry point. `npm test` runs source/test type checks, a Worker build dry run and the integration suite without deploying.
+
 Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
 
 ```bash

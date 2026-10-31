@@ -54,4 +54,42 @@ describe("Feed Worker integration", () => {
 		expect(response.status).toBe(502);
 		expect(await response.json()).toEqual({ error: "Upstream error 503" });
 	});
+
+  it("parses RSS XML using the deployed Worker runtime", async () => {
+    vi.mocked(globalThis.fetch).mockImplementation(async () => new Response(
+      '<rss version="2.0"><channel><title>RSS title</title><link>https://feeds.example.org/</link><item><title>Item</title><link>https://feeds.example.org/item</link><pubDate>Today</pubDate><description><![CDATA[Summary <b>text</b>]]></description></item></channel></rss>',
+      { headers: { "content-type": "application/rss+xml" } },
+    ));
+    const response = await SELF.fetch("https://local.test/rss?url=https%3A%2F%2Ffeeds.example.org%2Ffeed");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("public, max-age=120");
+    expect(await response.json()).toMatchObject({ type: "rss", feedTitle: "RSS title", feedLink: "https://feeds.example.org/", items: [{ title: "Item", link: "https://feeds.example.org/item", pubDate: "Today", summary: "Summary <b>text</b>" }] });
+  });
+
+  it("parses Atom XML and selects alternate links", async () => {
+    vi.mocked(globalThis.fetch).mockImplementation(async () => new Response(
+      '<feed xmlns="http://www.w3.org/2005/Atom"><title>Atom title</title><link href="https://feeds.example.org/"/><entry><title>Atom item</title><link rel="self" href="https://feeds.example.org/raw"/><link rel="alternate" href="https://feeds.example.org/item"/><updated>2026-10-31T00:00:00Z</updated><summary>Atom summary</summary></entry></feed>',
+      { headers: { "content-type": "application/atom+xml" } },
+    ));
+    const response = await SELF.fetch("https://local.test/rss?url=https%3A%2F%2Ffeeds.example.org%2Ffeed");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ feedTitle: "Atom title", items: [{ title: "Atom item", link: "https://feeds.example.org/item", pubDate: "2026-10-31T00:00:00Z", summary: "Atom summary" }] });
+  });
+
+  it.each([
+    '<rss><channel></rss>',
+    '<html><title>Not a feed</title></html>',
+    '<!DOCTYPE rss [<!ENTITY secret SYSTEM "http://127.0.0.1/private">]><rss><channel><title>&secret;</title></channel></rss>',
+  ])("rejects invalid or entity-bearing XML without extra fetches", async (xml) => {
+    vi.mocked(globalThis.fetch).mockImplementation(async () => new Response(xml, { headers: { "content-type": "application/xml" } }));
+    const response = await SELF.fetch("https://local.test/rss?url=https%3A%2F%2Ffeeds.example.org%2Ffeed");
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "Could not parse feed" });
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps template routes outside the deployed feed Worker", async () => {
+    expect((await SELF.fetch("https://local.test/tasks")).status).toBe(404);
+    expect((await SELF.fetch("https://local.test/dummy/example", { method: "POST" })).status).toBe(404);
+  });
 });
